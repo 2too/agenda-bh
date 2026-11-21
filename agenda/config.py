@@ -60,7 +60,8 @@ def load_settings(sources_file: Path = ROOT / "sources.yaml") -> Settings:
     env = os.environ.get
     s.site_url = env("SITE_URL", "")
     s.gemini_api_key = env("GEMINI_API_KEY", "")
-    s.gemini_model = env("GEMINI_MODEL", s.gemini_model)
+    # `or`: GitHub passes an EMPTY value when a variable isn't set, which must mean "use the default"
+    s.gemini_model = env("GEMINI_MODEL") or s.gemini_model
     s.gmail_user = env("GMAIL_USER", "")
     s.gmail_app_password = env("GMAIL_APP_PASSWORD", "")
     s.newsletter_to = [x.strip() for x in env("NEWSLETTER_TO", "").split(",") if x.strip()]
@@ -68,7 +69,7 @@ def load_settings(sources_file: Path = ROOT / "sources.yaml") -> Settings:
     s.ig_session_file = env("IG_SESSION_FILE", "")
     s.ig_graph_token = env("IG_GRAPH_TOKEN", "")
     s.ig_graph_user_id = env("IG_GRAPH_USER_ID", "")
-    s.ig_graph_version = env("IG_GRAPH_VERSION", s.ig_graph_version)
+    s.ig_graph_version = env("IG_GRAPH_VERSION") or s.ig_graph_version
     return s
 
 

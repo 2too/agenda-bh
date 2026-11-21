@@ -24,16 +24,35 @@ USER_AGENT = (
 _robots_cache: dict[str, urllib.robotparser.RobotFileParser | None] = {}
 
 
-def allowed_by_robots(url: str) -> bool:
+class RobotsBlocked(Exception):
+    pass
+
+
+def robots_from_response(status: int, text: str) -> urllib.robotparser.RobotFileParser | None:
+    """Only a robots.txt the site actually serves (HTTP 200) counts.
+
+    Python's own reader treats a 401/403 as "everything forbidden", but those
+    usually come from a firewall blocking the robots.txt request itself, not
+    from the site's rules. Unreadable = no rules known = allowed.
+    """
+    if status != 200:
+        return None
+    rp = urllib.robotparser.RobotFileParser()
+    rp.parse(text.splitlines())
+    return rp
+
+
+def allowed_by_robots(url: str, browser: "Browser | None" = None) -> bool:
     parts = urlparse(url)
     base = f"{parts.scheme}://{parts.netloc}"
     if base not in _robots_cache:
-        rp = urllib.robotparser.RobotFileParser(base + "/robots.txt")
         try:
-            rp.read()
-            _robots_cache[base] = rp
-        except Exception:  # robots.txt unreachable -> treat as allowed
-            _robots_cache[base] = None
+            status, text = browser.get(base + "/robots.txt") if browser else (0, "")
+        except Exception:
+            status, text = 0, ""
+        _robots_cache[base] = robots_from_response(status, text)
+        if status != 200:
+            log.info("%s: robots.txt not readable (HTTP %s), proceeding politely", base, status)
     rp = _robots_cache[base]
     return True if rp is None else rp.can_fetch(USER_AGENT, url)
 
@@ -119,6 +138,11 @@ class Browser:
         self._browser.close()
         self._pw.stop()
 
+    def get(self, url: str, timeout_ms: int = 30_000) -> tuple[int, str]:
+        """Plain HTTP GET with the browser's identity (passes firewalls that block scripts)."""
+        r = self._ctx.request.get(url, timeout=timeout_ms, headers={"Accept": "application/json,text/plain,*/*"})
+        return r.status, r.text()
+
     def html(self, url: str, scroll: int = 0, timeout_ms: int = 45_000) -> str:
         page = self._ctx.new_page()
         try:
@@ -146,7 +170,9 @@ def fetch_web_source(src: dict, settings: Settings, browser: Browser, now: datet
     article_urls: list[str] = []
 
     for i, url in enumerate(urls):
-        if not allowed_by_robots(url):
+        if not allowed_by_robots(url, browser):
+            if i == 0:
+                raise RobotsBlocked("o robots.txt do site não permite leitura automática desta página")
             log.warning("%s: robots.txt disallows %s, skipping", name, url)
             continue
         try:
@@ -169,7 +195,7 @@ def fetch_web_source(src: dict, settings: Settings, browser: Browser, now: datet
 
     seen = set()
     for url in article_urls[: (follow or {}).get("max", 10)]:
-        if url in seen or not allowed_by_robots(url):
+        if url in seen or not allowed_by_robots(url, browser):
             continue
         seen.add(url)
         try:

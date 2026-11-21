@@ -51,7 +51,7 @@ def occurrence_to_schema(o: dict, base: str) -> dict | None:
     }
 
 
-def fetch_mapas_source(src: dict, settings: Settings, now: datetime) -> list[RawItem]:
+def fetch_mapas_source(src: dict, settings: Settings, now: datetime, browser=None) -> list[RawItem]:
     base = src["url"].rstrip("/")
     start = now.astimezone(TZ).date()
     end = start + timedelta(days=settings.window_days)
@@ -62,7 +62,13 @@ def fetch_mapas_source(src: dict, settings: Settings, now: datetime) -> list[Raw
         "@order": "starts_on ASC",
     }
     url = f"{base}/api/event/findOccurrences?{urlencode(params)}"
-    data = _get_json(url)
+    if browser is not None:   # browser identity: the city's firewall refuses plain scripts (HTTP 403)
+        status, text = browser.get(url)
+        if status != 200:
+            raise RuntimeError(f"API answered HTTP {status}")
+        data = json.loads(text)
+    else:
+        data = _get_json(url)
     if not isinstance(data, list):
         raise ValueError("unexpected API answer")
     events = [e for e in (occurrence_to_schema(o, base) for o in data) if e]

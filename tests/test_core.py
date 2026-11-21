@@ -210,3 +210,28 @@ def test_source_hint_reaches_prompt_and_config_loads():
     e = to_event({"title": "Peixe Abissal", "start": "2026-11-19", "end": "2026-11-25",
                   "venue": "Cine Belas Artes", "category": "Cinema"}, "Cine Belas Artes", cine["url"], REF)
     assert e.neighborhood == "Lourdes" and in_window(e, *run_window(REF, 14))
+
+
+def test_robots_firewall_403_is_not_a_ban_but_real_rules_are_respected():
+    from agenda.fetchers.web import robots_from_response, USER_AGENT
+    assert robots_from_response(403, "") is None
+    assert robots_from_response(404, "") is None
+    rp = robots_from_response(200, "User-agent: *\nDisallow: /privado/\n")
+    assert rp.can_fetch(USER_AGENT, "https://x.com/agenda") and not rp.can_fetch(USER_AGENT, "https://x.com/privado/a")
+
+
+def test_empty_github_variable_falls_back_to_default(monkeypatch):
+    from agenda.config import load_settings
+    monkeypatch.setenv("GEMINI_MODEL", "")
+    assert load_settings().gemini_model == "gemini-flash-latest"
+
+
+def test_agendabh_article_pattern():
+    from agenda.config import load_settings
+    src = next(x for x in load_settings().sources if x["name"] == "Agenda BH")
+    html = ('<a href="https://agendabh.com.br/evento/good-times-a-festa-em-bh-20-11/">a</a>'
+            '<a href="https://agendabh.com.br/agenda-gratuita/">b</a>'
+            '<a href="https://agendabh.com.br/onde_ir/jirau-gastrobar/">c</a>')
+    f = src["follow_links"]
+    assert matching_links(html, src["url"], f["include"], f.get("exclude", []), 10) == [
+        "https://agendabh.com.br/evento/good-times-a-festa-em-bh-20-11/"]

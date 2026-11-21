@@ -47,9 +47,9 @@ sources:
     type: web
     url: https://agendabh.com.br/
     follow_links:
-      include: ['agendabh\.com\.br/[a-z0-9-]{12,}/?$']
-      exclude: ['/category/', '/tag/', '/author/', '/page/']
-      max: 15
+      # articles live under a section: /evento/..., /espetaculo/..., /destaque/...
+      include: ['agendabh\.com\.br/(evento|espetaculo|destaque|show|exposicao|cinema|concerto)/[a-z0-9-]{8,}/?$']
+      max: 18
     enabled: true
 
   - name: Circuito Liberdade
@@ -90,9 +90,9 @@ sources:
   - name: '@strvbh'
     type: instagram
     handle: strvbh
-    enabled: true
+    enabled: false   # turn on after setting up an Instagram login (README step 4)
 
   - name: '@rolesdocarmona'
     type: instagram
     handle: rolesdocarmona
-    enabled: true
+    enabled: false   # turn on after setting up an Instagram login (README step 4)

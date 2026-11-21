@@ -77,7 +77,7 @@ class Runner:
         if kind == "mapas":
             from .fetchers.mapas import fetch_mapas_source
             try:
-                items = fetch_mapas_source(src, self.s, self.now)
+                items = fetch_mapas_source(src, self.s, self.now, browser=self.browser())
                 if any(i.jsonld_events for i in items):
                     return items
                 log.warning("%s: API returned no events, reading the page instead", src["name"])
@@ -245,8 +245,11 @@ def main(argv: list[str] | None = None) -> int:
     for r in report:
         print(f"  {'OK  ' if r.ok else 'FAIL'} {r.name}: {r.events} events {('— ' + r.note) if r.note else ''}")
     print(f"\nDashboard: {settings.site_dir / 'index.html'}\nLog: {log_path}")
+    if report and len(failed) == len(report):
+        # still exit 0 so the dashboard (with last week's events) gets published
+        print("::warning::Every source failed this run. See the log.")
     store.close()
-    return 1 if report and len(failed) == len(report) else 0
+    return 0
 
 
 if __name__ == "__main__":
