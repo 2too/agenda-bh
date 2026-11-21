@@ -1,0 +1,93 @@
+name: Agenda BH semanal
+
+on:
+  schedule:
+    - cron: "17 9 * * 5"     # every Friday 06:17 in Belo Horizonte (09:17 UTC)
+  workflow_dispatch:          # "Run workflow" button for a manual run
+    inputs:
+      send_email:
+        description: "Send the newsletter?"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # save data/events.db back to the repo
+  pages: write
+  id-token: write
+
+concurrency:
+  group: agenda
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Tests
+        run: python -m pytest -q
+
+      - name: Restore Instagram session
+        env:
+          IG_SESSION_B64: ${{ secrets.IG_SESSION_B64 }}
+        run: |
+          if [ -n "$IG_SESSION_B64" ]; then echo "$IG_SESSION_B64" | base64 -d > ig.session; fi
+
+      - name: Run
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NEWSLETTER_TO: ${{ secrets.NEWSLETTER_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_SESSION_FILE: ig.session
+          IG_GRAPH_TOKEN: ${{ secrets.IG_GRAPH_TOKEN }}
+          IG_GRAPH_USER_ID: ${{ secrets.IG_GRAPH_USER_ID }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.send_email }}" = "true" ]; then
+            python -m agenda.main --email
+          else
+            python -m agenda.main
+          fi
+
+      - name: Save database
+        if: always()
+        run: |
+          rm -f ig.session
+          git config user.name "agenda-bot"
+          git config user.email "agenda-bot@users.noreply.github.com"
+          git add data/events.db
+          git commit -m "Weekly run $(date -u +%F)" || echo "nothing to save"
+          git push
+
+      - name: Keep the run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-log
+          path: logs/
+          retention-days: 30
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
