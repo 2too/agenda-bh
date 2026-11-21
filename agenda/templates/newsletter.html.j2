@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda BH — {{ week_label }}</title>
+</head>
+<body style="margin:0;padding:0;background:#F4F5F7;">
+<span style="display:none;max-height:0;overflow:hidden;">{{ preheader }}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="552" cellpadding="0" cellspacing="0" style="width:100%;max-width:552px;background:#FFFFFF;border:1px solid #E2E5EA;border-radius:16px;font-family:Inter,'Segoe UI',Helvetica,Arial,sans-serif;color:#11151C;">
+
+  <tr><td style="background:#1E3A9E;border-radius:16px 16px 0 0;padding:32px 36px 36px;color:#FFFFFF;">
+    <div style="font-size:20px;font-weight:800;">Agenda BH</div>
+    <div style="margin-top:16px;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#DCE3F7;">{{ date_label }}</div>
+    <h1 style="margin:8px 0 0;font-size:34px;line-height:1.1;font-weight:800;color:#FFFFFF;">Seu fim de semana em BH</h1>
+    <p style="margin:14px 0 0;font-size:15px;line-height:1.5;color:#DCE3F7;">{{ intro }}</p>
+  </td></tr>
+
+  {% if new %}
+  <tr><td style="padding:32px 36px 8px;">
+    <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#C2410C;">Novos esta semana</div>
+  </td></tr>
+  {% for e in new %}
+  <tr><td style="padding:12px 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td width="64" valign="top" style="width:64px;">
+        <table role="presentation" width="64" cellpadding="0" cellspacing="0" style="background:#EEF1F8;border-radius:12px;"><tr><td align="center" style="padding:10px 0;">
+          <div style="font-size:12px;font-weight:600;color:#1E3A9E;">{{ e.wd }}</div>
+          <div style="font-size:26px;font-weight:800;color:#1E3A9E;line-height:1;">{{ e.dd }}</div>
+        </td></tr></table>
+      </td>
+      <td valign="top" style="padding-left:16px;">
+        <a href="{{ e.url }}" style="font-size:17px;font-weight:600;color:#11151C;text-decoration:none;">{{ e.title }}</a>
+        <div style="margin-top:4px;font-size:14px;color:#5B6472;">{{ e.line }}</div>
+        <div style="margin-top:4px;font-size:14px;font-weight:600;color:{{ '#0F5C4D' if e.free else '#11151C' }};">{{ e.price }}</div>
+      </td>
+    </tr></table>
+  </td></tr>
+  {% endfor %}
+  {% endif %}
+
+  {% if free %}
+  <tr><td style="padding:24px 36px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E3F4EF;border-radius:14px;"><tr><td style="padding:22px 24px;">
+      <div style="font-size:20px;font-weight:600;color:#0F3F35;">De graça no fim de semana</div>
+      {% for e in free %}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;"><tr>
+        <td style="font-size:14px;font-weight:600;"><a href="{{ e.url }}" style="color:#11151C;text-decoration:none;">{{ e.title }}</a></td>
+        <td align="right" style="font-size:14px;color:#2F4F47;white-space:nowrap;padding-left:12px;">{{ e.short }}</td>
+      </tr></table>
+      {% endfor %}
+    </td></tr></table>
+  </td></tr>
+  {% endif %}
+
+  {% if more %}
+  <tr><td style="padding:32px 36px 0;">
+    <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5B6472;">Também nesta semana</div>
+    {% for e in more %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;"><tr>
+      <td style="font-size:14px;"><a href="{{ e.url }}" style="color:#11151C;text-decoration:none;">{{ e.title }}</a></td>
+      <td align="right" style="font-size:14px;color:#5B6472;white-space:nowrap;padding-left:12px;">{{ e.short }}</td>
+    </tr></table>
+    {% endfor %}
+  </td></tr>
+  {% endif %}
+
+  {% if site_url %}
+  <tr><td style="padding:28px 36px 32px;">
+    <a href="{{ site_url }}" style="display:block;text-align:center;background:#1E3A9E;color:#FFFFFF;font-weight:600;font-size:15px;text-decoration:none;padding:16px;border-radius:12px;">Ver a agenda completa</a>
+  </td></tr>
+  {% else %}
+  <tr><td style="padding:16px;"></td></tr>
+  {% endif %}
+
+  <tr><td style="background:#F4F5F7;border-radius:0 0 16px 16px;padding:22px 36px;font-size:12px;line-height:1.5;color:#5B6472;">
+    Eventos coletados automaticamente de sites e perfis públicos. Confirme data e preço na fonte antes de ir.
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

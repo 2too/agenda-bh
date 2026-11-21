@@ -1,0 +1,98 @@
+# Agenda BH — sources
+# Every source can be turned off with `enabled: false`.
+#
+# type: web       -> opens the page in a real browser (Playwright), reads JSON-LD
+#                    event data if the site has it, otherwise sends the page
+#                    text to the AI to pull out the events.
+#   follow_links  -> for news-style sites where the listing only has headlines:
+#                    open the matching article links and extract from each one.
+#   pages         -> extra pages to read (pagination).
+#   scroll        -> how many times to scroll down (for "load more" sites).
+#   {date_from} / {date_to} in a URL are filled in on each run.
+# type: mapas     -> Mapas Culturais public API (falls back to `web` if it fails).
+# type: instagram -> latest posts from a public profile (caption + flyer image).
+
+settings:
+  window_days: 14          # look ahead this many days
+  instagram_max_posts: 12  # posts checked per profile per run
+  instagram_max_age_days: 21
+  request_delay_seconds: 3 # pause between page loads (be polite)
+
+sources:
+  - name: Culturadoria
+    type: web
+    url: https://culturadoria.com.br/
+    follow_links:
+      include: ['culturadoria\.com\.br/[a-z0-9-]{12,}/?$']
+      exclude: ['/category/', '/tag/', '/author/', '/page/']
+      max: 12
+    enabled: true
+
+  - name: Sympla
+    type: web
+    url: https://www.sympla.com.br/eventos/belo-horizonte-mg?category=city
+    scroll: 4
+    enabled: true
+
+  - name: Portal Belo Horizonte
+    type: web
+    url: https://portalbelohorizonte.com.br/eventos?page=0
+    pages:
+      - https://portalbelohorizonte.com.br/eventos?page=1
+      - https://portalbelohorizonte.com.br/eventos?page=2
+      - https://portalbelohorizonte.com.br/eventos?page=3
+    enabled: true
+
+  - name: Agenda BH
+    type: web
+    url: https://agendabh.com.br/
+    follow_links:
+      include: ['agendabh\.com\.br/[a-z0-9-]{12,}/?$']
+      exclude: ['/category/', '/tag/', '/author/', '/page/']
+      max: 15
+    enabled: true
+
+  - name: Circuito Liberdade
+    type: web
+    url: https://circuitoliberdade.com.br/agenda?cat=&date_from={date_from}&date_to={date_to}
+    pages:
+      - https://circuitoliberdade.com.br/agenda?cat=&date_from={date_from}&date_to={date_to}&page=2
+    default_venue_hint: Circuito Liberdade (Praça da Liberdade e arredores)
+    enabled: true
+
+  - name: Mapa Cultural BH
+    type: mapas
+    url: https://mapaculturalbh.pbh.gov.br
+    fallback_url: https://mapaculturalbh.pbh.gov.br/eventos/
+    enabled: true
+
+  - name: Sou BH
+    type: web
+    url: https://soubh.uai.com.br/agenda
+    follow_links:
+      include: ['soubh\.uai\.com\.br/agenda/[a-z-]+/[a-z0-9-]{12,}/?$']
+      max: 15
+    enabled: true
+
+  - name: Cine Belas Artes
+    type: web
+    url: https://www.belasartescine.com.br/
+    default_venue_hint: Cine Belas Artes — Rua Gonçalves Dias, 1581, Lourdes
+    extract_hint: >-
+      É a programação semanal de um cinema. Para cada filme em cartaz, crie UMA
+      entrada só (não uma por sessão): start = primeiro dia da semana de
+      programação, end = último dia, category = Cinema, e coloque na descrição
+      os horários das sessões e o gênero. Sessões especiais com data própria
+      (debates, pré-estreias, clubes) viram entradas separadas com data e hora.
+      price_text = faixa de preços da tabela de ingressos (ex.: "R$ 13 a R$ 26").
+    enabled: true
+
+  - name: '@strvbh'
+    type: instagram
+    handle: strvbh
+    enabled: true
+
+  - name: '@rolesdocarmona'
+    type: instagram
+    handle: rolesdocarmona
+    enabled: true
