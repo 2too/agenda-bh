@@ -279,3 +279,22 @@ def test_incremental_saves_merge_across_sources(tmp_path):
     s.upsert(dedupe([_ev("Samba de Roda no Mercado Novo", src="Agenda BH")]), REF)
     s.upsert(dedupe([_ev("SAMBA DE RODA", src="@ig", is_instagram=True)]), REF)
     assert len(s.window(*run_window(REF, 14), REF)) == 1
+
+
+def test_block_page_detection():
+    from agenda.fetchers.web import looks_blocked
+    assert looks_blocked("<html><head><title>Just a moment...</title></head><body>Checking your browser</body></html>")
+    assert not looks_blocked("<html><body><main>" + "Agenda cultural de BH. " * 200 + "</main></body></html>")
+
+
+def test_all_sources_valid():
+    from agenda.config import load_settings
+    import re as _re
+    srcs = load_settings().sources
+    names = [x["name"] for x in srcs]
+    assert len(names) == len(set(names))
+    for x in srcs:
+        assert x.get("type", "web") in ("web", "mapas", "instagram")
+        for p in (x.get("follow_links") or {}).get("include", []):
+            _re.compile(p)
+    assert {"Cine Theatro Brasil", "Palácio das Artes", "Cine Humberto Mauro", "Shotgun"} <= set(names)

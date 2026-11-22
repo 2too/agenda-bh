@@ -28,6 +28,21 @@ class RobotsBlocked(Exception):
     pass
 
 
+class SiteBlocked(Exception):
+    pass
+
+
+CHALLENGE_MARKERS = ("just a moment", "checking your browser", "verify you are human", "verifique que você é humano",
+                     "attention required", "cf-challenge", "challenge-platform", "access denied", "acesso negado")
+
+
+def looks_blocked(html: str) -> bool:
+    """True for a firewall/bot-check page instead of the real content."""
+    head = html[:6000].lower()
+    text_len = len(visible_text(html))
+    return text_len < 1500 and any(m in head for m in CHALLENGE_MARKERS)
+
+
 def robots_from_response(status: int, text: str) -> urllib.robotparser.RobotFileParser | None:
     """Only a robots.txt the site actually serves (HTTP 200) counts.
 
@@ -143,7 +158,7 @@ class Browser:
         r = self._ctx.request.get(url, timeout=timeout_ms, headers={"Accept": "application/json,text/plain,*/*"})
         return r.status, r.text()
 
-    def html(self, url: str, scroll: int = 0, timeout_ms: int = 45_000) -> str:
+    def html(self, url: str, scroll: int = 0, timeout_ms: int = 45_000, frames: bool = False) -> str:
         page = self._ctx.new_page()
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
@@ -151,10 +166,23 @@ class Browser:
                 page.wait_for_load_state("networkidle", timeout=15_000)
             except Exception:
                 pass  # some sites never go idle; what we have is enough
+            html = page.content()
+            if looks_blocked(html):
+                page.wait_for_timeout(12_000)   # many bot checks pass on their own after a few seconds
+                html = page.content()
+                if looks_blocked(html):
+                    raise SiteBlocked("o site mostrou uma verificação anti-robô (ex.: Cloudflare) em vez do conteúdo")
             for _ in range(scroll):
                 page.mouse.wheel(0, 4000)
                 page.wait_for_timeout(1500)
-            return page.content()
+            html = page.content()
+            if frames:   # embedded widgets (e.g. ticket-seller agendas) live in iframes
+                for f in page.frames[1:]:
+                    try:
+                        html += "\n" + f.content()
+                    except Exception:
+                        pass
+            return html
         finally:
             page.close()
 
@@ -176,7 +204,7 @@ def fetch_web_source(src: dict, settings: Settings, browser: Browser, now: datet
             log.warning("%s: robots.txt disallows %s, skipping", name, url)
             continue
         try:
-            html = browser.html(url, scroll=src.get("scroll", 0))
+            html = browser.html(url, scroll=src.get("scroll", 0), frames=src.get("frames", False))
         except Exception as e:
             if i == 0:
                 raise  # the main page failing = the source failed

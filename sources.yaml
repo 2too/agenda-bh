@@ -94,6 +94,49 @@ sources:
       price_text = faixa de preços da tabela de ingressos (ex.: "R$ 13 a R$ 26").
     enabled: true
 
+  - name: Cine Theatro Brasil
+    type: web
+    url: https://www.cinetheatrobrasil.com.br/programacao/
+    default_venue_hint: Cine Theatro Brasil Vallourec, Centro (salas Grande Theatro Unimed-BH e Teatro de Câmara)
+    extract_hint: >-
+      As datas aparecem sem mês ou ano (ex.: "21 de novembro", "21 e 22 de novembro").
+      Para "21 e 22 de novembro" crie uma entrada por dia. Coloque a sala no campo venue
+      junto com o nome do teatro. Horário e preço quase nunca aparecem: deixe vazio.
+    enabled: true
+
+  - name: Palácio das Artes
+    type: web
+    url: https://site.bileto.sympla.com.br/palaciodasartes/
+    frames: true          # the agenda is an embedded Sympla widget
+    scroll: 3
+    default_venue_hint: Palácio das Artes — Av. Afonso Pena, 1537, Centro
+    follow_links:
+      include: ['sympla\.com\.br/(evento|eventos)/[a-z0-9-]+/\d+', 'bileto\.sympla\.com\.br/event/\d+']
+      max: 10
+    enabled: true
+
+  - name: Cine Humberto Mauro
+    type: web
+    url: https://www.cinehumbertomauromais.com/programacao
+    default_venue_hint: Cine Humberto Mauro — Palácio das Artes, Centro
+    extract_hint: >-
+      É a grade de um cinema. As sessões ficam sob títulos de data como "11/11 QUA" e cada
+      linha começa com o horário ("17h"). Crie uma entrada por sessão: title = título em
+      português do filme (ou o original se não houver), start = data + horário,
+      category = Cinema, description = diretor, país, ano, duração e notas como
+      "Sessão apresentada" ou o nome da mostra. "23h59" é a sessão da meia-noite daquele dia.
+      Ignore dias sem programação.
+    enabled: true
+
+  - name: Shotgun
+    type: web
+    url: https://shotgun.live/pt-br/cities/belo-horizonte
+    scroll: 4
+    extract_hint: >-
+      É uma lista de festas e shows agrupados por data, com local, horário e preço.
+      Use category = Festa para festas e baladas, Música para shows.
+    enabled: true
+
   - name: '@strvbh'
     type: instagram
     handle: strvbh
