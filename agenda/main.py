@@ -74,6 +74,9 @@ class Runner:
         if kind == "instagram":
             from .fetchers.instagram import fetch_instagram_source
             return fetch_instagram_source(src, self.s)
+        if kind == "manual":
+            from .fetchers.manual import fetch_manual_source
+            return fetch_manual_source(src)
         if kind == "mapas":
             from .fetchers.mapas import fetch_mapas_source
             try:
@@ -88,6 +91,8 @@ class Runner:
         return fetch_web_source(src, self.s, self.browser(), self.now)
 
     def extract(self, item: RawItem, is_ig: bool) -> list[dict]:
+        if item.raw_events:
+            return item.raw_events
         if item.jsonld_events:
             return [jsonld_to_raw(ev, item.url) for ev in item.jsonld_events]
         if not item.text.strip() and not item.image_urls:

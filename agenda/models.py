@@ -22,6 +22,7 @@ class RawItem:
     jsonld_events: list[dict] = field(default_factory=list)
     venue_hint: str = ""
     extract_hint: str = ""     # extra instructions for the AI, per source
+    raw_events: list[dict] = field(default_factory=list)   # ready-made events (manual lists)
 
 
 @dataclass

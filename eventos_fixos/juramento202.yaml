@@ -1,0 +1,29 @@
+# Programação fixa do Juramento 202 — "Mês do Jura", novembro de 2026.
+# Copiada do cartaz mensal da casa. Para o mês seguinte, troque a lista `eventos`.
+# Horários e preços só onde se sabe (as tabelas da @strevbh); o resto fica em branco.
+local: Juramento 202
+endereco: R. Juramento, 202
+bairro: Pompéia
+categoria: Música
+link: https://www.google.com/maps/search/?api=1&query=Juramento+202+Belo+Horizonte
+
+eventos:
+  - {data: 2026-11-04, titulo: Músicas de Comer do Tito}
+  - {data: 2026-11-05, titulo: Choro do Jura}
+  - {data: 2026-11-06, titulo: Samba de Madrinha}
+  - {data: 2026-11-07, titulo: Samba da Laura}
+  - {data: 2026-11-08, titulo: Jura Que Me Ama}
+  - {data: 2026-11-11, titulo: Vinícius Mendes Quarteto}
+  - {data: 2026-11-12, titulo: Choro do Jura}
+  - {data: 2026-11-13, titulo: Samba de Madrinha}
+  - {data: 2026-11-14, titulo: Pagode da Iara}
+  - {data: 2026-11-18, titulo: Lu Bekerman}
+  - {data: 2026-11-19, hora: "18:00", titulo: Choro do Jura, preco: Grátis}
+  - {data: 2026-11-20, hora: "18:00", titulo: Samba de Madrinha, preco: Grátis}
+  - {data: 2026-11-21, hora: "17:00", titulo: Assanhado Quarteto, preco: Grátis}
+  - {data: 2026-11-22, hora: "15:00", titulo: "Meu Samba é Reza — Luter Nguzuale", preco: Grátis}
+  - {data: 2026-11-25, titulo: Adriana Chaves}
+  - {data: 2026-11-26, titulo: Choro do Jura}
+  - {data: 2026-11-27, titulo: Samba de Madrinha}
+  - {data: 2026-11-28, titulo: Feijão Sem Bicho}
+  # 15/11 e 29/11: fechado

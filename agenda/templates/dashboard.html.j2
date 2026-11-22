@@ -88,6 +88,39 @@
   .navy{background:var(--navy);color:#fff;border:0}
   .navy p{margin:0;font-size:14px;line-height:1.5;color:var(--sky)}
   footer{font-size:12px;color:var(--muted);padding:0 0 40px}
+  .tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:12px}
+  .tab{display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:9px;border:0;background:transparent;color:var(--sky);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .tab[aria-selected="true"]{background:#fff;color:var(--navy)}
+  .star{width:44px;height:44px;border:0;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin:-10px -10px -10px 0}
+  .weekbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin-top:28px}
+  .weeknav{display:flex;align-items:center;gap:12px}
+  .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid #D5D9E0;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+  .iconbtn:disabled{opacity:.35;cursor:default}
+  .seg{display:flex;gap:4px;background:#E8EBF0;padding:4px;border-radius:12px}
+  .seg button{height:40px;padding:0 16px;border-radius:9px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(17,21,28,.08)}
+  .btn-primary{height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--blue);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary:disabled{background:#C9CED6;cursor:default}
+  .summary{flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 24px}
+  .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:start}
+  @media (max-width:980px){.week{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}
+  .daycol{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .dh{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+  .dh.mine{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .dh.off{opacity:.55}
+  .dh .w{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .dh .n{font-family:'Bricolage Grotesque',Inter,sans-serif;font-weight:800;font-size:26px;line-height:1}
+  .dh .c{font-size:12px}
+  .card2{display:flex;flex-direction:column;gap:6px;padding:4px 12px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+  .card2.on{border:2px solid var(--blue);box-shadow:0 6px 18px rgba(30,58,158,.12)}
+  .card2 .t{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;padding-top:10px}
+  .card2 h4{margin:0;font-size:14px;font-weight:600;line-height:1.3}
+  .card2 h4 a{color:var(--ink);text-decoration:none}.card2 h4 a:hover{text-decoration:underline}
+  .card2 .v{font-size:12px;line-height:1.4;color:var(--muted)}
+  .card2 .price-chip{font-size:12px;padding:3px 8px;border-radius:6px}
+  .dayempty{border:1px dashed #C9CED6;border-radius:12px;padding:16px 12px;text-align:center;font-size:12px;color:var(--muted)}
+  .runs-inline{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:14px}
+  [hidden]{display:none!important}
   @media (max-width:640px){.wrap{padding:0 18px}.ev .when{width:64px}.head{padding-bottom:32px}.new-grid{margin-top:20px}.search{width:100%}}
 </style>
 </head>
@@ -99,6 +132,10 @@
       <div class="brand display">
         <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 L9 9 L13 15 L16 11 L21 20 Z"/><circle cx="17" cy="5" r="2"/></svg>
         Agenda BH
+      </div>
+      <div class="tabs" role="tablist" aria-label="Seções">
+        <button type="button" class="tab" role="tab" id="tab-agenda" aria-selected="true" aria-controls="view-agenda">Agenda</button>
+        <button type="button" class="tab" role="tab" id="tab-semana" aria-selected="false" aria-controls="view-semana">Minha semana</button>
       </div>
       <span class="meta">Atualizado {{ updated_label }} · {{ total }} eventos de {{ sources_ok }} fontes</span>
     </div>
@@ -116,7 +153,7 @@
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="view-agenda" role="tabpanel" aria-labelledby="tab-agenda">
   <section aria-label="Novos esta semana" class="new-grid" id="new"></section>
 
   <div class="cols">
@@ -159,6 +196,30 @@
   <footer>Eventos coletados automaticamente de sites e perfis públicos. Confirme data e preço na fonte antes de ir.</footer>
 </main>
 
+<main class="wrap" id="view-semana" role="tabpanel" aria-labelledby="tab-semana" hidden>
+  <div class="weekbar">
+    <div class="weeknav">
+      <button type="button" class="iconbtn" id="wk-prev" aria-label="Semana anterior"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg></button>
+      <h2 class="section display" id="wk-title" aria-live="polite"></h2>
+      <button type="button" class="iconbtn" id="wk-next" aria-label="Próxima semana"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 L16 12 L9 19"/></svg></button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <div class="seg" role="group" aria-label="Mostrar">
+        <button type="button" id="wk-all" aria-pressed="true">Tudo</button>
+        <button type="button" id="wk-mine" aria-pressed="false">Só os marcados</button>
+      </div>
+      <button type="button" class="btn-primary" id="ics"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10 H21 M8 3 V7 M16 3 V7"/></svg>Levar para minha agenda</button>
+    </div>
+  </div>
+  <section class="panel summary" id="wk-summary" aria-live="polite"></section>
+  <div class="week" id="week"></div>
+  <section class="panel" id="wk-runs-panel">
+    <h2 class="display">Em cartaz a semana toda</h2>
+    <div class="runs-inline" id="wk-runs"></div>
+  </section>
+  <footer>Toque na estrela para marcar. As marcações ficam salvas neste navegador. "Levar para minha agenda" baixa um arquivo que o Google Agenda, o Apple Calendário e o Outlook importam.</footer>
+</main>
+
 <script id="data" type="application/json">{{ data_json | safe }}</script>
 <script>
 (function(){
@@ -167,7 +228,16 @@
     'Oficina':'#B45309','Palestra':'#475569','Feira':'#BE185D','Infantil':'#0369A1','Festa':'#9D174D','Outro':'#6B7280'};
   var IG = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8"/></svg>';
   var WEB = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12 H21 M12 3 C15 6 15 18 12 21 C9 18 9 6 12 3"/></svg>';
-  var st = {cat:'Todos', free:false, q:'', hood:''};
+  var st = {cat:'Todos', free:false, q:'', hood:'', view:'agenda', week:0, mineOnly:false};
+  var STAR_PATH = 'M12 3 L14.6 8.6 L20.7 9.3 L16.2 13.4 L17.4 19.5 L12 16.5 L6.6 19.5 L7.8 13.4 L3.3 9.3 L9.4 8.6 Z';
+  var stars = {};
+  try { stars = JSON.parse(localStorage.getItem('agendabh-stars') || '{}') || {}; } catch (e) { stars = {}; }
+  function saveStars(){ try { localStorage.setItem('agendabh-stars', JSON.stringify(stars)); } catch (e) {} }
+  function starBtn(e){
+    var on = !!stars[e.id];
+    return '<button type="button" class="star" data-star="'+esc(e.id)+'" aria-pressed="'+on+'" aria-label="'+(on?'Desmarcar ':'Marcar ')+esc(e.title)+'">'+
+      '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="'+(on?'#C2410C':'none')+'" stroke="'+(on?'#C2410C':'#8A919C')+'" stroke-width="1.8" stroke-linejoin="round"><path d="'+STAR_PATH+'"/></svg></button>';
+  }
   function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fold(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();}
   function match(e){
@@ -180,8 +250,8 @@
   function priceChip(e){return '<span class="price-chip'+(e.free?' free':'')+'">'+esc(e.price)+'</span>';}
   function row(e){
     return '<article class="ev"><div class="when"><span class="time">'+esc(e.time||'—')+'</span><span class="note">'+esc(e.note)+'</span></div>'+
-      '<div class="body"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><h4><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.title)+'</a></h4>'+
-      (e.isNew?'<span class="badge">NOVO</span>':'')+'</div>'+
+      '<div class="body"><div style="display:flex;flex-wrap:nowrap;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px"><h4><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.title)+'</a></h4>'+
+      (e.isNew?'<span class="badge">NOVO</span>':'')+'</div>'+starBtn(e)+'</div>'+
       ((e.venue||e.hood)?'<span class="place">'+esc([e.venue,e.hood].filter(Boolean).join(' · '))+'</span>':'')+
       (e.desc?'<p>'+esc(e.desc)+'</p>':'')+
       '<div class="foot"><span class="cat"><i style="background:'+(COLORS[e.cat]||'#6B7280')+'"></i>'+esc(e.cat)+'</span>'+
@@ -226,7 +296,121 @@
     document.getElementById('free').setAttribute('aria-pressed', String(st.free));
     document.querySelectorAll('#hoods .chip').forEach(function(b){b.setAttribute('aria-pressed', String(b.dataset.hood===st.hood));});
   }
+  // ---------- Minha semana ----------
+  var WD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var MON = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var MONF = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  function dt(iso){ return new Date(iso+'T12:00:00'); }
+  function isoOf(d){ var m=d.getMonth()+1, x=d.getDate(); return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(x<10?'0':'')+x; }
+  function addDays(d,n){ var c=new Date(d.getTime()); c.setDate(c.getDate()+n); return c; }
+  var inWin = {}; D.days.forEach(function(d){ inWin[d.key]=1; });
+  var firstDay = D.days.length ? D.days[0].key : isoOf(new Date());
+  var lastDay = D.days.length ? D.days[D.days.length-1].key : firstDay;
+  var weeks = [];
+  (function(){ var m = dt(firstDay); m = addDays(m, -((m.getDay()+6)%7));
+    while (isoOf(m) <= lastDay) { var w=[]; for (var i=0;i<7;i++) w.push(isoOf(addDays(m,i))); weeks.push(w); m = addDays(m,7); } })();
+  var todayIso = isoOf(new Date());
+  (function(){
+    for (var i=0;i<weeks.length;i++){ if (weeks[i].indexOf(todayIso)!==-1){ st.week=i; break; } }
+    // nothing left this week (e.g. Sunday night)? open the next one
+    var w = weeks[st.week] || [];
+    var left = D.events.some(function(e){ return !e.run && e.day>=todayIso && w.indexOf(e.day)!==-1; });
+    if (!left && st.week < weeks.length-1) st.week++;
+  })();
+  function weekTitle(w){
+    var a=dt(w[0]), b=dt(w[6]);
+    return a.getMonth()===b.getMonth() ? a.getDate()+' a '+b.getDate()+' de '+MONF[a.getMonth()] : a.getDate()+' de '+MONF[a.getMonth()]+' a '+b.getDate()+' de '+MONF[b.getMonth()];
+  }
+  function matchQ(e){ if(!st.q) return true; return fold(e.title+' '+e.venue+' '+e.hood+' '+e.desc+' '+e.source).indexOf(fold(st.q))!==-1; }
+  function card(e){
+    var on=!!stars[e.id];
+    return '<article class="card2'+(on?' on':'')+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px"><span class="t">'+esc(e.time||'—')+'</span>'+starBtn(e)+'</div>'+
+      '<h4><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.title)+'</a></h4>'+
+      ((e.venue||e.hood)?'<span class="v">'+esc([e.venue,e.hood].filter(Boolean).join(' · '))+'</span>':'')+
+      '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-top:2px"><span class="cat" style="font-size:12px"><i style="background:'+(COLORS[e.cat]||'#6B7280')+'"></i>'+esc(e.cat)+'</span>'+priceChip(e)+'</div></article>';
+  }
+  function renderWeek(){
+    if(!weeks.length){ document.getElementById('week').innerHTML='<div class="empty">Sem dados ainda.</div>'; return; }
+    st.week = Math.max(0, Math.min(st.week, weeks.length-1));
+    var w = weeks[st.week];
+    document.getElementById('wk-title').textContent = weekTitle(w);
+    document.getElementById('wk-prev').disabled = st.week===0;
+    document.getElementById('wk-next').disabled = st.week===weeks.length-1;
+    document.getElementById('wk-all').setAttribute('aria-pressed', String(!st.mineOnly));
+    document.getElementById('wk-mine').setAttribute('aria-pressed', String(st.mineOnly));
+    var weekEvents = D.events.filter(function(e){ return !e.run && w.indexOf(e.day)!==-1; });
+    var mine = weekEvents.filter(function(e){ return stars[e.id]; });
+    document.getElementById('week').innerHTML = w.map(function(day){
+      var d=dt(day), evs=weekEvents.filter(function(e){ return e.day===day && e.day>=todayIso && matchQ(e) && (!st.mineOnly || stars[e.id]); });
+      var nMine = mine.filter(function(e){ return e.day===day; }).length;
+      var total = weekEvents.filter(function(e){ return e.day===day; }).length;
+      var past = day < todayIso;
+      var off = !inWin[day] || past;
+      var label = off ? ((past||day<firstDay)?'já passou':'sem dados ainda') : (nMine? nMine+(nMine===1?' marcado':' marcados') : total+(total===1?' rolê':' rolês'));
+      var empty = off ? ((past||day<firstDay)?'Já passou':'A agenda deste dia chega na próxima atualização') : (st.mineOnly?'Dia livre':'Nada encontrado');
+      return '<section class="daycol" aria-label="'+WD[d.getDay()]+' '+d.getDate()+' de '+MONF[d.getMonth()]+'"><div class="dh'+(nMine?' mine':'')+(off?' off':'')+'"><span class="w">'+WD[d.getDay()]+'</span><span class="n">'+d.getDate()+'</span><span class="c">'+label+'</span></div>'+
+        (evs.length? evs.map(card).join('') : '<div class="dayempty">'+empty+'</div>')+'</section>';
+    }).join('');
+    var cost = mine.reduce(function(s,e){ return s + (typeof e.cost==='number'? e.cost : 0); },0);
+    var unknown = mine.some(function(e){ return typeof e.cost!=='number'; });
+    var freeDays = w.filter(function(day){ return inWin[day] && day>=todayIso && !mine.some(function(e){return e.day===day;}); }).map(function(day){ return WD[dt(day).getDay()]; });
+    document.getElementById('wk-summary').innerHTML = mine.length
+      ? '<strong class="display" style="font-size:18px">Minha semana: '+mine.length+(mine.length===1?' rolê':' rolês')+'</strong><span class="count">'+(cost===0 && !unknown ? 'Tudo grátis' : 'Ingressos a partir de R$ '+cost+(unknown?' + os sem preço informado':''))+'</span><span class="count">Dias livres: '+(freeDays.length?freeDays.join(', '):'nenhum')+'</span>'
+      : '<strong class="display" style="font-size:18px">Nenhum rolê marcado nesta semana</strong><span class="count">Toque na estrela de um evento para montar sua semana.</span>';
+    var runs = D.events.filter(function(e){ return e.run && matchQ(e); });
+    document.getElementById('wk-runs-panel').hidden = !runs.length;
+    document.getElementById('wk-runs').innerHTML = runs.slice(0,10).map(function(e){
+      return '<span><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.title)+'</a> <span class="count">· '+esc([e.venue,e.note,e.price].filter(Boolean).join(' · '))+'</span></span>'; }).join('');
+    var allMine = D.events.filter(function(e){ return stars[e.id] && !e.run; });
+    document.getElementById('ics').disabled = !allMine.length;
+  }
+  function icsText(list){
+    function x(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+    var now = new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+    var out = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Agenda BH//PT-BR','CALSCALE:GREGORIAN'];
+    list.forEach(function(e){
+      var d = e.day.replace(/-/g,'');
+      out.push('BEGIN:VEVENT','UID:'+e.id+'@agenda-bh','DTSTAMP:'+now);
+      if(e.time){ out.push('DTSTART;TZID=America/Sao_Paulo:'+d+'T'+e.time.replace(':','')+'00','DURATION:PT2H'); }
+      else { var n=addDays(dt(e.day),1); out.push('DTSTART;VALUE=DATE:'+d,'DTEND;VALUE=DATE:'+isoOf(n).replace(/-/g,'')); }
+      out.push('SUMMARY:'+x(e.title),'LOCATION:'+x([e.venue,e.address,e.hood].filter(Boolean).join(', ')),
+               'DESCRIPTION:'+x([e.price, e.desc, e.url].filter(Boolean).join(' — ')),'URL:'+x(e.url),'END:VEVENT');
+    });
+    out.push('END:VCALENDAR');
+    return out.join('\r\n');
+  }
+  function setView(v){
+    st.view = v;
+    document.getElementById('view-agenda').hidden = v!=='agenda';
+    document.getElementById('view-semana').hidden = v!=='semana';
+    document.getElementById('tab-agenda').setAttribute('aria-selected', String(v==='agenda'));
+    document.getElementById('tab-semana').setAttribute('aria-selected', String(v==='semana'));
+    try { history.replaceState(null,'', v==='semana'?'#semana':'#'); } catch(e) {}
+    if(v==='semana') renderWeek();
+  }
+  document.getElementById('tab-agenda').addEventListener('click', function(){ setView('agenda'); });
+  document.getElementById('tab-semana').addEventListener('click', function(){ setView('semana'); });
+  document.getElementById('wk-prev').addEventListener('click', function(){ st.week--; renderWeek(); });
+  document.getElementById('wk-next').addEventListener('click', function(){ st.week++; renderWeek(); });
+  document.getElementById('wk-all').addEventListener('click', function(){ st.mineOnly=false; renderWeek(); });
+  document.getElementById('wk-mine').addEventListener('click', function(){ st.mineOnly=true; renderWeek(); });
+  document.getElementById('ics').addEventListener('click', function(){
+    var list = D.events.filter(function(e){ return stars[e.id] && !e.run; });
+    if(!list.length) return;
+    var blob = new Blob([icsText(list)], {type:'text/calendar;charset=utf-8'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'minha-semana-agenda-bh.ics';
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest('button[data-star]'); if(!b) return;
+    var id = b.getAttribute('data-star');
+    if(stars[id]) delete stars[id]; else stars[id] = 1;
+    saveStars();
+    if(st.view==='semana') renderWeek(); else render();
+  });
+
   renderNew(); renderCats(); renderHoods(); render();
+  if(location.hash==='#semana') setView('semana');
   document.getElementById('cats').addEventListener('click', function(ev){
     var b = ev.target.closest('button'); if(!b) return;
     if(b.id==='free'){st.free=!st.free;} else {st.cat=b.dataset.cat;}
@@ -236,7 +420,7 @@
     var b = ev.target.closest('button'); if(!b) return;
     st.hood = st.hood===b.dataset.hood ? '' : b.dataset.hood; render();
   });
-  document.getElementById('q').addEventListener('input', function(ev){st.q=ev.target.value.trim(); render();});
+  document.getElementById('q').addEventListener('input', function(ev){st.q=ev.target.value.trim(); if(st.view==='semana') renderWeek(); else render();});
 })();
 </script>
 </body>

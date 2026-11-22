@@ -11,6 +11,7 @@
 #   {date_from} / {date_to} in a URL are filled in on each run.
 # type: mapas     -> Mapas Culturais public API (falls back to `web` if it fails).
 # type: instagram -> latest posts from a public profile (caption + flyer image).
+# type: manual    -> fixed programme typed by hand in eventos_fixos/*.yaml (no AI).
 
 settings:
   window_days: 14          # look ahead this many days
@@ -135,6 +136,44 @@ sources:
     extract_hint: >-
       É uma lista de festas e shows agrupados por data, com local, horário e preço.
       Use category = Festa para festas e baladas, Música para shows.
+    enabled: true
+
+  - name: Clube de Jazz do Café
+    type: web
+    url: https://clubedejazzdocafe.com/shows/
+    default_venue_hint: Clube de Jazz do Café — R. Antônio de Albuquerque, 47, Savassi
+    extract_hint: >-
+      Lista de shows de jazz, com dia da semana e dia/mês (sem ano), horário de
+      abertura da casa e horários dos sets. start = horário do primeiro set;
+      coloque a abertura da casa e os sets na descrição. "Ingressos na porta" vai
+      na descrição; price_text fica vazio se não houver valor. category = Música.
+    enabled: true
+
+  - name: Filarmônica de Minas Gerais
+    type: web
+    url: https://filarmonica.art.br/agenda/
+    default_venue_hint: Sala Minas Gerais — Barro Preto
+    extract_hint: >-
+      Agenda de concertos. Concerto com mais de uma data (ex.: "03 e 04 de dezembro")
+      vira uma entrada por data. "gratuito" = price_text "Grátis". Se disser que os
+      ingressos gratuitos são retirados a partir de uma data, ponha isso na descrição.
+      Use o link "saiba mais" de cada concerto como url. category = Música.
+    enabled: true
+
+  - name: Mina Jazz
+    type: web
+    url: https://reserva.meep.com.br/minajazz
+    scroll: 2
+    default_venue_hint: Mina Jazz
+    extract_hint: >-
+      Página de reservas de uma casa de jazz. Cada show ou noite com data é um
+      evento (category = Música). Ignore cardápio, mesas e opções de reserva que
+      não sejam shows com data.
+    enabled: true
+
+  - name: Juramento 202
+    type: manual
+    file: eventos_fixos/juramento202.yaml
     enabled: true
 
   - name: '@strvbh'

@@ -53,6 +53,9 @@ def view(e: Event, win_start: datetime) -> dict:
         "note": note, "run": run, "venue": e.venue, "hood": e.neighborhood, "cat": e.category,
         "price": price_label(e), "free": e.is_free, "isNew": e.is_new, "ig": e.is_instagram,
         "source": e.source, "url": e.url, "desc": e.description,
+        "id": e.key or f"{e.start:%Y%m%d}-{abs(hash(e.title)) % 10**8}",
+        "cost": 0 if e.is_free else e.price_min,
+        "address": e.address,
     }
 
 

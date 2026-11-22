@@ -294,7 +294,20 @@ def test_all_sources_valid():
     names = [x["name"] for x in srcs]
     assert len(names) == len(set(names))
     for x in srcs:
-        assert x.get("type", "web") in ("web", "mapas", "instagram")
+        assert x.get("type", "web") in ("web", "mapas", "instagram", "manual")
         for p in (x.get("follow_links") or {}).get("include", []):
             _re.compile(p)
     assert {"Cine Theatro Brasil", "Palácio das Artes", "Cine Humberto Mauro", "Shotgun"} <= set(names)
+
+
+def test_manual_juramento_programme():
+    from agenda import main as M
+    from agenda.config import Settings, load_settings
+    src = next(x for x in load_settings().sources if x["name"] == "Juramento 202")
+    r = M.Runner(Settings(), REF, None)
+    res, evs = r.run_source(src)
+    titles = {e.title for e in evs}
+    assert res.ok and "Luter Nguzuale" in " ".join(titles) and "Feijão Sem Bicho" in titles
+    luter = next(e for e in evs if "Luter" in e.title)
+    assert luter.has_time and luter.start.hour == 15 and luter.is_free and luter.neighborhood == "Pompéia"
+    assert all(e.start.date() >= REF.date() for e in evs)   # past nights are dropped
