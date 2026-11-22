@@ -16,7 +16,7 @@ from ..models import RawItem
 
 log = logging.getLogger(__name__)
 
-MAX_TEXT_CHARS = 30_000
+MAX_TEXT_CHARS = 18_000
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 AgendaBH/1.0"

@@ -39,7 +39,7 @@ class Settings:
     site_url: str = ""
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-flash-latest"
+    gemini_model: str = "gemini-flash-lite-latest"   # fast, no long "thinking", bigger free quota
 
     gmail_user: str = ""
     gmail_app_password: str = ""

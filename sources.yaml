@@ -21,10 +21,17 @@ settings:
 sources:
   - name: Culturadoria
     type: web
-    url: https://culturadoria.com.br/
+    url: https://culturadoria.com.br/categoria/agenda-cultural/
+    pages:
+      - https://culturadoria.com.br/categoria/cinema/
+      - https://culturadoria.com.br/categoria/exposicao/
+      - https://culturadoria.com.br/categoria/teatro/
+      - https://culturadoria.com.br/categoria/literatura/
+      - https://culturadoria.com.br/categoria/gastronomia/
     follow_links:
-      include: ['culturadoria\.com\.br/[a-z0-9-]{12,}/?$']
-      exclude: ['/category/', '/tag/', '/author/', '/page/']
+      # any article link that isn't a category/tag/author page
+      include: ['culturadoria\.com\.br/(?!categoria/|tag/|autor/|author/|page/|wp-)[a-z0-9-]{10,}/?$',
+                'culturadoria\.com\.br/\d{4}/\d{2}/[a-z0-9-]+/?$']
       max: 12
     enabled: true
 
@@ -49,7 +56,7 @@ sources:
     follow_links:
       # articles live under a section: /evento/..., /espetaculo/..., /destaque/...
       include: ['agendabh\.com\.br/(evento|espetaculo|destaque|show|exposicao|cinema|concerto)/[a-z0-9-]{8,}/?$']
-      max: 18
+      max: 10
     enabled: true
 
   - name: Circuito Liberdade
@@ -71,7 +78,7 @@ sources:
     url: https://soubh.uai.com.br/agenda
     follow_links:
       include: ['soubh\.uai\.com\.br/agenda/[a-z-]+/[a-z0-9-]{12,}/?$']
-      max: 15
+      max: 10
     enabled: true
 
   - name: Cine Belas Artes

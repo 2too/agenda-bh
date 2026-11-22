@@ -130,7 +130,7 @@ def build_prompt(item: RawItem, now: datetime) -> str:
         source=item.source, url=item.url,
         venue_line=f"Local provável (se o texto não disser outro): {item.venue_hint}" if item.venue_hint else "",
         extra_line=f"Instrução específica desta fonte (tem prioridade): {item.extract_hint}\n" if item.extract_hint else "",
-        categories=", ".join(CATEGORIES), text=item.text[:30_000] or "(sem texto — leia a imagem)",
+        categories=", ".join(CATEGORIES), text=item.text[:18_000] or "(sem texto — leia a imagem)",
     )
 
 
@@ -195,6 +195,15 @@ def pick_model(models: list[tuple[str, list[str]]]) -> str | None:
     return best
 
 
+class QuotaExhausted(RuntimeError):
+    pass
+
+
+def is_daily_quota(msg: str) -> bool:
+    m = msg.lower()
+    return ("429" in m or "resource_exhausted" in m) and ("perday" in m or "per day" in m or "per_day" in m)
+
+
 class GeminiExtractor:
     """Thin wrapper with pacing and retry, so the free tier isn't exceeded."""
 
@@ -207,6 +216,7 @@ class GeminiExtractor:
                                     http_options=types.HttpOptions(api_version="v1beta"))
         self._model = settings.gemini_model
         self._picked = False
+        self._quota_gone = False
         self._min_interval = min_interval
         self._last = 0.0
         self.calls = 0
@@ -231,6 +241,8 @@ class GeminiExtractor:
         self._last = time.monotonic()
 
     def extract(self, item: RawItem, now: datetime, with_image: bool) -> list[dict]:
+        if self._quota_gone:
+            raise QuotaExhausted("cota diária grátis do Gemini esgotada; o resto fica para a próxima execução")
         from google.genai import types
         parts: list = [build_prompt(item, now)]
         if with_image and item.image_urls:
@@ -238,7 +250,7 @@ class GeminiExtractor:
             if img:
                 parts.append(types.Part.from_bytes(data=img[0], mime_type=img[1]))
         config = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
-        for attempt in range(5):
+        for attempt in range(4):
             self._wait()
             try:
                 resp = self._client.models.generate_content(model=self._model, contents=parts, config=config)
@@ -250,8 +262,12 @@ class GeminiExtractor:
                     self._picked = True          # only once per run
                     self._model = self._pick_available_model()
                     continue
+                if is_daily_quota(msg):
+                    self._quota_gone = True
+                    log.error("Gemini daily free quota used up; skipping AI for the rest of this run")
+                    raise QuotaExhausted("cota diária grátis do Gemini esgotada; o resto fica para a próxima execução")
                 if "429" in msg or "RESOURCE_EXHAUSTED" in msg or "503" in msg:
-                    wait = 30 * (attempt + 1)
+                    wait = 20 * (attempt + 1)
                     log.warning("Gemini busy/limited, waiting %ss (%s)", wait, msg[:120])
                     time.sleep(wait)
                     continue

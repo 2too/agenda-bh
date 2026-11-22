@@ -223,7 +223,7 @@ def test_robots_firewall_403_is_not_a_ban_but_real_rules_are_respected():
 def test_empty_github_variable_falls_back_to_default(monkeypatch):
     from agenda.config import load_settings
     monkeypatch.setenv("GEMINI_MODEL", "")
-    assert load_settings().gemini_model == "gemini-flash-latest"
+    assert load_settings().gemini_model == "gemini-flash-lite-latest"
 
 
 def test_agendabh_article_pattern():
@@ -253,3 +253,29 @@ def test_pick_model_stable_beats_newer_preview():
     from agenda.extract import pick_model
     gc = ["generateContent"]
     assert pick_model([("models/gemini-3.5-flash-preview", gc), ("models/gemini-3.1-flash", gc)]) == "gemini-3.1-flash"
+
+
+def test_daily_quota_detection():
+    from agenda.extract import is_daily_quota
+    assert is_daily_quota("429 RESOURCE_EXHAUSTED ... quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+    assert not is_daily_quota("429 RESOURCE_EXHAUSTED ... GenerateRequestsPerMinutePerProjectPerModel")
+    assert not is_daily_quota("503 UNAVAILABLE high demand")
+
+
+def test_culturadoria_article_links():
+    from agenda.config import load_settings
+    src = next(x for x in load_settings().sources if x["name"] == "Culturadoria")
+    f = src["follow_links"]
+    html = ('<a href="https://culturadoria.com.br/mostra-de-cinema-frances-chega-a-bh/">a</a>'
+            '<a href="https://culturadoria.com.br/categoria/teatro/">b</a>'
+            '<a href="/2026/11/festival-de-jazz-na-praca/">c</a>')
+    assert matching_links(html, src["url"], f["include"], [], 10) == [
+        "https://culturadoria.com.br/mostra-de-cinema-frances-chega-a-bh/",
+        "https://culturadoria.com.br/2026/11/festival-de-jazz-na-praca/"]
+
+
+def test_incremental_saves_merge_across_sources(tmp_path):
+    s = Store(tmp_path / "t.db")
+    s.upsert(dedupe([_ev("Samba de Roda no Mercado Novo", src="Agenda BH")]), REF)
+    s.upsert(dedupe([_ev("SAMBA DE RODA", src="@ig", is_instagram=True)]), REF)
+    assert len(s.window(*run_window(REF, 14), REF)) == 1

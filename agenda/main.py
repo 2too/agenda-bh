@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .config import Settings, TZ, load_settings, run_window
 from .dedupe import dedupe
-from .extract import GeminiExtractor, content_hash, jsonld_to_raw
+from .extract import GeminiExtractor, QuotaExhausted, content_hash, jsonld_to_raw
 from .models import Event, RawItem, SourceResult
 from .normalize import in_window, to_event
 from .output import build_site, newsletter_html, send_newsletter
@@ -115,6 +115,10 @@ class Runner:
             for item in items:
                 try:
                     raws = self.extract(item, is_ig)
+                except QuotaExhausted as e:
+                    item_errors += 1
+                    last_error = e
+                    continue          # cached pages and JSON-LD still work; just no new AI calls
                 except Exception as e:
                     item_errors += 1
                     last_error = e
@@ -211,6 +215,9 @@ def main(argv: list[str] | None = None) -> int:
             res, evs = runner.run_source(src)
             report.append(res)
             found.extend(evs)
+            if persist and evs:
+                # save as we go: if the run is stopped (time limit), finished sources aren't lost
+                store.upsert(dedupe(list(evs)), now)
     finally:
         runner.close()
 
@@ -226,7 +233,6 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if report and report[0].ok else 1
 
     if persist:
-        store.upsert(merged, now)
         store.save_run(now, [r.__dict__ for r in report])
         events = store.window(win_start, win_end, now)
     else:
