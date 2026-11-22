@@ -172,6 +172,29 @@ def _download(url: str, limit: int = 8_000_000) -> tuple[bytes, str] | None:
         return None
 
 
+SKIP_MODEL_WORDS = ("image", "tts", "live", "audio", "embedding", "exp", "learnlm", "robotics", "computer")
+
+
+def pick_model(models: list[tuple[str, list[str]]]) -> str | None:
+    """Choose the best general 'flash' model from (name, supported_actions) pairs.
+
+    Stable before preview (previews have tighter free limits), then newest, then full before lite.
+    """
+    best, best_rank = None, None
+    for name, actions in models:
+        name = name.split("/")[-1]
+        if actions and "generateContent" not in actions:
+            continue
+        if "flash" not in name or any(w in name for w in SKIP_MODEL_WORDS):
+            continue
+        m = re.search(r"gemini-(\d+(?:\.\d+)?)", name)
+        version = float(m.group(1)) if m else 0.0
+        rank = ("preview" not in name, version, "lite" not in name, "latest" not in name, -len(name))
+        if best_rank is None or rank > best_rank:
+            best, best_rank = name, rank
+    return best
+
+
 class GeminiExtractor:
     """Thin wrapper with pacing and retry, so the free tier isn't exceeded."""
 
@@ -179,12 +202,27 @@ class GeminiExtractor:
         if not settings.gemini_api_key:
             raise RuntimeError("GEMINI_API_KEY is not set (see README, step 3)")
         from google import genai
-        self._genai = genai
-        self._client = genai.Client(api_key=settings.gemini_api_key)
+        from google.genai import types
+        self._client = genai.Client(api_key=settings.gemini_api_key,
+                                    http_options=types.HttpOptions(api_version="v1beta"))
         self._model = settings.gemini_model
+        self._picked = False
         self._min_interval = min_interval
         self._last = 0.0
         self.calls = 0
+
+    def _pick_available_model(self) -> str:
+        """Ask Google which models this key can use and choose one."""
+        pairs = []
+        for m in self._client.models.list():
+            actions = getattr(m, "supported_actions", None) or getattr(m, "supported_generation_methods", None) or []
+            pairs.append((m.name or "", list(actions)))
+        name = pick_model(pairs)
+        if not name:
+            raise RuntimeError("no Gemini 'flash' model available for this key: "
+                               + ", ".join(n.split("/")[-1] for n, _ in pairs[:15]))
+        log.info("Gemini model %r not available; using %r instead", self._model, name)
+        return name
 
     def _wait(self):
         gap = time.monotonic() - self._last
@@ -200,7 +238,7 @@ class GeminiExtractor:
             if img:
                 parts.append(types.Part.from_bytes(data=img[0], mime_type=img[1]))
         config = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
-        for attempt in range(4):
+        for attempt in range(5):
             self._wait()
             try:
                 resp = self._client.models.generate_content(model=self._model, contents=parts, config=config)
@@ -208,6 +246,10 @@ class GeminiExtractor:
                 return parse_llm_json(resp.text or "")
             except Exception as e:
                 msg = str(e)
+                if ("404" in msg or "NOT_FOUND" in msg) and not self._picked:
+                    self._picked = True          # only once per run
+                    self._model = self._pick_available_model()
+                    continue
                 if "429" in msg or "RESOURCE_EXHAUSTED" in msg or "503" in msg:
                     wait = 30 * (attempt + 1)
                     log.warning("Gemini busy/limited, waiting %ss (%s)", wait, msg[:120])

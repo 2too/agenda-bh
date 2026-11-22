@@ -235,3 +235,21 @@ def test_agendabh_article_pattern():
     f = src["follow_links"]
     assert matching_links(html, src["url"], f["include"], f.get("exclude", []), 10) == [
         "https://agendabh.com.br/evento/good-times-a-festa-em-bh-20-11/"]
+
+
+def test_pick_model_prefers_newest_stable_flash():
+    from agenda.extract import pick_model
+    gc = ["generateContent"]
+    models = [("models/gemini-2.0-flash", gc), ("models/gemini-2.5-flash", gc),
+              ("models/gemini-3.1-flash-lite", gc), ("models/gemini-3.1-flash-image-preview", gc),
+              ("models/gemini-3.1-pro-preview", gc), ("models/gemini-embedding-001", ["embedContent"]),
+              ("models/gemini-3-flash-preview", gc)]
+    assert pick_model(models) == "gemini-3.1-flash-lite"
+    assert pick_model([("models/gemini-2.5-flash", gc), ("models/gemini-2.5-flash-lite", gc)]) == "gemini-2.5-flash"
+    assert pick_model([("models/text-embedding", ["embedContent"])]) is None
+
+
+def test_pick_model_stable_beats_newer_preview():
+    from agenda.extract import pick_model
+    gc = ["generateContent"]
+    assert pick_model([("models/gemini-3.5-flash-preview", gc), ("models/gemini-3.1-flash", gc)]) == "gemini-3.1-flash"

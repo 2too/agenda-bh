@@ -111,11 +111,13 @@ class Runner:
         try:
             items = self.fetch(src)
             item_errors = 0
+            last_error = None
             for item in items:
                 try:
                     raws = self.extract(item, is_ig)
                 except Exception as e:
                     item_errors += 1
+                    last_error = e
                     log.warning("%s: extraction failed for %s (%s)", name, item.url, e)
                     if item_errors >= 3 and not events:
                         raise RuntimeError(f"extraction keeps failing: {e}")
@@ -125,6 +127,8 @@ class Runner:
                     ev = to_event(raw, name, item.url, self.now, is_instagram=is_ig, image_url=img)
                     if ev and in_window(ev, self.win_start, self.win_end):
                         events.append(ev)
+            if item_errors and not events:
+                raise RuntimeError(f"a IA não conseguiu ler nenhuma página: {last_error}")
             log.info("%s: %d item(s) read, %d event(s) in window", name, len(items), len(events))
             note = "nada encontrado" if not events else ""
             return SourceResult(name, True, len(events), note), events

@@ -184,8 +184,14 @@ def fetch_web_source(src: dict, settings: Settings, browser: Browser, now: datet
             continue
         jsonld = extract_jsonld_events(html)
         if follow:
-            article_urls += matching_links(html, url, follow.get("include", []),
-                                           follow.get("exclude", []), follow.get("max", 10))
+            found = matching_links(html, url, follow.get("include", []),
+                                   follow.get("exclude", []), follow.get("max", 10))
+            article_urls += found
+            if not found and not jsonld:
+                # link pattern matched nothing: read the listing page itself instead
+                log.warning("%s: no article links matched on %s, reading the page itself", name, url)
+                items.append(RawItem(source=name, url=url, text=visible_text(html),
+                                     venue_hint=hint, extract_hint=extra))
             if jsonld:
                 items.append(RawItem(source=name, url=url, jsonld_events=jsonld, venue_hint=hint))
         else:
